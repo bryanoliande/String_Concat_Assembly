@@ -1,0 +1,96 @@
+Comment !
+Program:   Str_concat.asm
+ Student:     Bryan Oliande
+ Date Due:        4/14/15
+ Class:       CSCI 241
+ Instructor:  Mr. Ding
+Description: Prompts the user for two strings then concatenates the source string to the target
+!
+
+
+
+INCLUDE Irvine32.inc
+
+;subroutine prototypes 
+Str_concat PROTO, target:PTR BYTE, source:PTR BYTE
+
+
+.data
+MAX = 80                     ;max chars to read
+targetStr BYTE MAX+1 DUP(?)		;room for null
+sourceStr BYTE MAX+1 DUP(?)		;room for null
+prompt BYTE "Enter a string: ",0
+result BYTE "The string concatenated: ",0
+
+.code
+main PROC
+
+	  mov  edx,OFFSET prompt
+      call WriteString
+
+	  mov  edx,OFFSET targetStr
+      mov  ecx,MAX            ;buffer size - 1
+      call ReadString	;targetStr now holds target string
+
+	  call crlf
+
+	  mov  edx,OFFSET prompt
+      call WriteString
+
+	  mov  edx,OFFSET sourceStr
+      mov  ecx,MAX            ;buffer size - 1
+      call ReadString	;source now holds the source string
+	  
+	  call crlf
+
+	  INVOKE Str_concat, ADDR targetStr, ADDR sourceStr ;targetStr now holds concatenated string
+
+	  mov  edx,OFFSET result
+      call WriteString
+
+	   mov edx,OFFSET targetStr
+	   call WriteString
+
+	   call crlf
+	   call WaitMsg
+
+	exit
+main ENDP
+
+Str_concat PROC, target:PTR BYTE, source:PTR BYTE
+;---------------------------------------------------
+; Concatenates a source string to a target string
+; Receives: 2 addresses of byte arrays (strings)
+; Returns:  the target string now has the source string concatenated to it
+;----------------------------------------------------
+	;point to end of target
+	mov edi,target
+	
+	L1:
+		cmp BYTE PTR[edi],0	;end of target?
+		je Next				;yes, continue, edi points to end of targetStr
+		inc edi				;no,keep going
+		jmp L1
+	Next:
+		mov esi,source
+		mov eax,0	;length counter of source
+
+		;find the length of the source string
+	L2:
+		cmp BYTE PTR[esi],0	;end of source?
+		je Continue			;yes, continue
+		inc esi				;no, point to next char
+		inc eax				;and increment the count
+		jmp L2
+	Continue:
+		sub esi,eax	;point to start of source
+		mov ecx,eax	;setting rep counter
+		cld			;direction=forward
+		rep movsb	;copy source to the end of target
+		mov BYTE PTR[edi],0	;null terminate target
+	ret
+Str_concat ENDP
+
+
+
+END main
